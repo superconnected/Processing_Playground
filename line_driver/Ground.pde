@@ -4,10 +4,12 @@ class Ground {
   Ground() {
     surface = new ArrayList<Vec2>();
     float angle = 0;
+    surface.add(new Vec2(0, 0));
     for(int i = 0; i < width; i++) {
-      surface.add(new Vec2(i, height - 100 + sin(angle) * 80));
+      surface.add(new Vec2(i, height - 100 + sin(angle) * 50));
       angle += 0.01;
     }
+    surface.add(new Vec2(width, 0));
     
     ChainShape chain = new ChainShape();
     Vec2[] vertices = new Vec2[surface.size()];

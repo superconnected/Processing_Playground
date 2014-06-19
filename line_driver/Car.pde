@@ -2,10 +2,17 @@ class Car {
   Body body;
   Tire tire1, tire2;
   float w,h;
+  float motorSpeed = 14;
+  RevoluteJoint tire1_joint;
+  RevoluteJoint tire2_joint;
+  boolean canReverse = true;
+  float edge = 100;
   
   Car(float x, float y, float w_, float h_) {
     w = w_;
     h = h_;
+    
+    edge = w * 1.2;
     
     tire1 = new Tire(x - w/2, y + h/2);
     tire2 = new Tire(x + w/2, y + h/2);
@@ -23,14 +30,14 @@ class Car {
     );
     body.createFixture(ps, 1.0);
     
-    RevoluteJoint t1_joint = createTireJoint(tire1);
-    RevoluteJoint t2_joint = createTireJoint(tire2);
+    tire1_joint = createTireJoint(tire1);
+    tire2_joint = createTireJoint(tire2);
   }
   
   private RevoluteJoint createTireJoint(Tire tire) {
     RevoluteJointDef rjd = new RevoluteJointDef();
     rjd.initialize(body, tire.body, tire.body.getWorldCenter());
-    rjd.motorSpeed = -12;
+    rjd.motorSpeed = motorSpeed;
     rjd.maxMotorTorque = 1000;
     rjd.enableMotor = true;
     
@@ -57,5 +64,20 @@ class Car {
     
     tire1.display();
     tire2.display();
+    
+    if (pos.x + w/2 > width - edge || pos.x - w/2 - edge < 0){
+      reverseDirection();
+      canReverse = false;
+    } else {
+      canReverse = true;
+    }
+  }
+  
+  void reverseDirection() {
+    if (canReverse) {
+      motorSpeed *= -1;
+      tire1_joint.setMotorSpeed(motorSpeed);
+      tire2_joint.setMotorSpeed(motorSpeed);
+    }
   }
 }

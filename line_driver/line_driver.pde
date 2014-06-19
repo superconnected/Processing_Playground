@@ -17,7 +17,7 @@ void setup(){
   box2d = new Box2DProcessing(this);
   box2d.createWorld();
   
-  car = new Car(100, 100, 100, 40); 
+  car = new Car(width/2, 200, 100, 40); 
   ground = new Ground();
 }
 
