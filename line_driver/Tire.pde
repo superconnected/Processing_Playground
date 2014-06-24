@@ -2,8 +2,8 @@ class Tire {
   Body body;
   float r;
   
-  Tire(float x, float y) {
-    r = 16;
+  Tire(float x, float y, float r_) {
+    r = r_;
     
     BodyDef bd = new BodyDef();
     bd.position.set(box2d.coordPixelsToWorld(new Vec2(x,y)));
@@ -18,9 +18,10 @@ class Tire {
     fd.shape = cs;
     fd.friction = 1;
     fd.restitution = 0.2;
-    fd.density = 4;
+    fd.density = 1;
     
     body.createFixture(fd);
+    body.setUserData(this);
   }
   
   void display() {

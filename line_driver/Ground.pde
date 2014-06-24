@@ -1,15 +1,16 @@
 class Ground {
   ArrayList<Vec2> surface;
   
-  Ground() {
+  Ground(int wallWidth) {
     surface = new ArrayList<Vec2>();
-    float angle = 0;
-    surface.add(new Vec2(0, 0));
-    for(int i = 0; i < width; i++) {
-      surface.add(new Vec2(i, height - 100 + sin(angle) * 50));
-      angle += 0.01;
+    float angle = random(0, PI);
+    float amplitude = random(30, 80);
+    for(int i = wallWidth; i < width - wallWidth; i++) {
+      float y = height - 100 + sin(angle) * amplitude;
+      angle += PI/(width/4);
+      
+      surface.add(new Vec2(i, y));
     }
-    surface.add(new Vec2(width, 0));
     
     ChainShape chain = new ChainShape();
     Vec2[] vertices = new Vec2[surface.size()];
@@ -22,7 +23,12 @@ class Ground {
     
     BodyDef bd = new BodyDef();
     Body body = box2d.world.createBody(bd);
-    body.createFixture(chain, 1);
+    
+    FixtureDef fd = new FixtureDef();
+    fd.shape = chain;
+    fd.friction = 5;
+    fd.density = 1.0;
+    body.createFixture(fd);
   }
   
   void display() {
@@ -31,9 +37,9 @@ class Ground {
     noFill();
     
     beginShape();
-    for(Vec2 v : surface) {
+    for (Vec2 v : surface) {
       vertex(v.x,v.y);
     }
-    endShape();
+    endShape(); //<>//
   }
 }

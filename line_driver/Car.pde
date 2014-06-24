@@ -2,20 +2,19 @@ class Car {
   Body body;
   Tire tire1, tire2;
   float w,h;
-  float motorSpeed = 14;
+  float tireRadius;
   RevoluteJoint tire1_joint;
   RevoluteJoint tire2_joint;
   boolean canReverse = true;
-  float edge = 100;
+  float lastSpeed = 0;
   
-  Car(float x, float y, float w_, float h_) {
+  Car(float x, float y, float w_, float h_, float tireRadius_) {
     w = w_;
     h = h_;
+    tireRadius = tireRadius_;
     
-    edge = w * 1.2;
-    
-    tire1 = new Tire(x - w/2, y + h/2);
-    tire2 = new Tire(x + w/2, y + h/2);
+    tire1 = new Tire(x - w/2, y, tireRadius);
+    tire2 = new Tire(x + w/2, y, tireRadius);
     
     BodyDef bd = new BodyDef();
     bd.position.set(box2d.coordPixelsToWorld(x, y));
@@ -29,6 +28,7 @@ class Car {
       box2d.scalarPixelsToWorld(h/2)
     );
     body.createFixture(ps, 1.0);
+    body.setUserData(this);
     
     tire1_joint = createTireJoint(tire1);
     tire2_joint = createTireJoint(tire2);
@@ -37,8 +37,8 @@ class Car {
   private RevoluteJoint createTireJoint(Tire tire) {
     RevoluteJointDef rjd = new RevoluteJointDef();
     rjd.initialize(body, tire.body, tire.body.getWorldCenter());
-    rjd.motorSpeed = motorSpeed;
-    rjd.maxMotorTorque = 1000;
+    rjd.motorSpeed = 0;
+    rjd.maxMotorTorque = 250 * body.m_mass/2;
     rjd.enableMotor = true;
     
     return (RevoluteJoint)box2d.world.createJoint(rjd);
@@ -64,20 +64,26 @@ class Car {
     
     tire1.display();
     tire2.display();
-    
-    if (pos.x + w/2 > width - edge || pos.x - w/2 - edge < 0){
-      reverseDirection();
-      canReverse = false;
-    } else {
-      canReverse = true;
-    }
   }
   
   void reverseDirection() {
-    if (canReverse) {
-      motorSpeed *= -1;
-      tire1_joint.setMotorSpeed(motorSpeed);
-      tire2_joint.setMotorSpeed(motorSpeed);
+    float motorSpeed = tire1_joint.getMotorSpeed();
+    setSpeed(-motorSpeed);
+  }
+  
+  void setSpeed(float speed) {
+    tire1_joint.setMotorSpeed(speed);
+    tire2_joint.setMotorSpeed(speed);
+  }
+  
+  void toggleMotor() {
+    float motorSpeed = tire1_joint.getMotorSpeed();
+    if (motorSpeed == 0) {
+      if (lastSpeed == 0) setSpeed(tireRadius);
+      else setSpeed(lastSpeed);
+    } else {
+      lastSpeed = motorSpeed;
+      setSpeed(0);
     }
   }
 }
