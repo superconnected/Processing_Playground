@@ -54,7 +54,7 @@ def horizontally_mirrored(lst):
 def draw_cells(cells, x, y):
     pushMatrix()
     translate(x,y)
-    x = 0
+    
     y = 0
     for row in cells:
         x = 0
