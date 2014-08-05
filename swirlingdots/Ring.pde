@@ -7,7 +7,7 @@ class Ring {
     this.speed = speed;
     
     this.angle = 0.0;
-    this.inc = radians(360.0/n);
+    this.inc = TWO_PI/n;
     this.centerX = width/2;
     this.centerY = height/2;
   }
@@ -16,9 +16,10 @@ class Ring {
     fill(0);
     float a = 0;
     for(int i = 0; i < n; i++) {
+      float dotDiameter = 10 + n/10;
       float x = centerX + cos(angle + a) * diameter;
       float y = centerY + sin(angle + a) * diameter;
-      ellipse(x, y, 10, 10);
+      ellipse(x, y, dotDiameter, dotDiameter);
       a += inc;
     }
     
