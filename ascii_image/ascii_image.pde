@@ -18,6 +18,7 @@ void setup() {
   // build up a character array that corresponds to brightness values
   ascii = new char[256];
   String letters = "MN@#$o;:,. ";
+  //String letters = "W@MQBN%8692#V4FY>7?1I~|*;:,. ";
   for (int i = 0; i < 256; i++) {
     int index = int(map(i, 0, 256, 0, letters.length()));
     ascii[i] = letters.charAt(index);
