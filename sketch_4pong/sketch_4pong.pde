@@ -1,21 +1,18 @@
 int paddleLength = 80,
   paddleThickness = 5,
   misses = 0;
-float paddleOffset = paddleLength/2;
-float top, bottom, left, right; // ball/paddle collision boundaries
+float paddleOffset = paddleLength/2,
+  minSpeed = 2,
+  maxSpeed = 12;
 Ball ball;
 Paddle topPaddle, bottomPaddle, leftPaddle, rightPaddle; // paddles
 PVector middle; // middle of the board
+float dt, runTime;
 
 void setup() {
   size(500, 500);
   
   int gap = paddleThickness * 2;
-  
-  top = paddleThickness + gap;
-  bottom = height - paddleThickness - gap;
-  left = paddleThickness + gap;
-  right = width - paddleThickness - gap;
   
   topPaddle = new Paddle(new PVector(width/2, gap), new PVector(paddleLength, paddleThickness));
   bottomPaddle = new Paddle(new PVector(width/2, height - gap), new PVector(paddleLength, paddleThickness));
@@ -24,18 +21,31 @@ void setup() {
   
   middle = new PVector(width/2, height/2);
   ball = new Ball(middle, randomVelocity(), 5);
+  runTime = millis();
+}
+
+PVector randomVelocity() {
+  return PVector.mult(PVector.random2D(), minSpeed);
+}
+
+void resetBall() {
+  ball.position.set(middle);
+  ball.velocity.set(randomVelocity());
 }
 
 void draw() {
+  dt = (millis() - runTime) / (1000/60);
+  runTime = millis();
+  
   background(255);
   noCursor();
   
   handlePaddleMovement();
-  ball.move();
+  ball.move(dt);
   drawPaddles();
   ball.display();
   handleBallBoundaries();
-  handleCollisions();
+  handleCollisions(dt);
   
   fill(155,155,155);
   text("missed: " + misses, 40, 40);
@@ -55,8 +65,7 @@ void handlePaddleMovement() {
 void handleBallBoundaries() {
   if (ball.position.x < 0 || ball.position.x > width || ball.position.y < 0 || ball.position.y > height) {
     misses++;
-    ball.position.set(middle);
-    ball.velocity.set(randomVelocity());
+    resetBall();
   }
 }
 
@@ -67,71 +76,25 @@ void drawPaddles() {
   rightPaddle.display();
 }
 
-void handleCollisions() {
-  PVector nextPosition = ball.getNextPosition();
-  PVector intersect = null;
-  
-  if (ball.position.y > top && nextPosition.y <= top) {
-    intersect = intersection(nextPosition, middle, top, false);
-    if (isPointWithinPaddleBounds(intersect, topPaddle, false)) {
-      ball.velocity.y *= -1.05;
-      //todo: add spin
-    }
-  } else if (ball.position.y < bottom && nextPosition.y >= bottom) {
-    intersect = intersection(nextPosition, middle, bottom, false);
-    if (isPointWithinPaddleBounds(intersect, bottomPaddle, false)) {
-      ball.velocity.y *= -1.05;
-      //todo: add spin
-    }
-  }
-  
-  if (ball.position.x > left && nextPosition.x <= left) {
-    intersect = intersection(nextPosition, middle, left, true);
-    if (isPointWithinPaddleBounds(intersect, leftPaddle, true)) {
-      ball.velocity.x *= -1.05;
-      //todo: add spin
-    }
-  } else if (ball.position.x < right && nextPosition.x >= right) {
-    intersect = intersection(nextPosition, middle, right, true);
-    if (isPointWithinPaddleBounds(intersect, rightPaddle, true)) {
-      ball.velocity.x *= -1.05;
-      //todo: add spin
-    }
-  }
-}
-
-PVector intersection(PVector lineEnd, PVector origin, float wall, boolean isVertical) {
-  // translate so that the origin is (0, 0), makes the calculations easier
-  PVector endPoint = PVector.sub(lineEnd, origin);
-  wall = isVertical ? wall - origin.y : wall - origin.x;
-  
-  if (endPoint.x == 0) {
-    if (!isVertical) {
-      return PVector.add(new PVector(0, wall), origin);
-    }
-    return null;
-  }
+void handleCollisions(float dt) {
+  float ballTop = ball.position.y - ball.size,
+    ballBottom = ball.position.y + ball.size,
+    ballLeft = ball.position.x - ball.size,
+    ballRight = ball.position.x + ball.size;
     
-  float a = endPoint.y/endPoint.x;
-  
-  if (isVertical) {
-    return PVector.add(new PVector(wall, a * wall), origin);
-  }
-  
-  return PVector.add(new PVector(wall/a, wall), origin);
-}
-
-boolean isPointWithinPaddleBounds(PVector point, Paddle paddle, boolean isVertical) {
-  if (point == null)
-    return false;
+  if (topPaddle.containsPoint(new PVector(ball.position.x, ballTop)) || bottomPaddle.containsPoint(new PVector(ball.position.x, ballBottom))) {
+    ball.velocity.y *= -1.05;
+    float a = ball.position.x - topPaddle.position.x;
+    ball.velocity.x = map(a, -paddleLength, paddleLength, -maxSpeed, maxSpeed);
     
-  if(isVertical) {
-    return point.y >= paddle.position.y - paddleOffset && point.y <= paddle.position.y + paddleOffset;
+    ball.velocity.x = (ball.velocity.x > 0) ? max(ball.velocity.x, minSpeed) : min(ball.velocity.x, -minSpeed);
   }
   
-  return point.x >= paddle.position.x - paddleOffset && point.x <= paddle.position.x + paddleOffset;
-}
-
-PVector randomVelocity() {
-  return PVector.mult(PVector.random2D(), 3);
+  if (leftPaddle.containsPoint(new PVector(ballLeft, ball.position.y)) || rightPaddle.containsPoint(new PVector(ballRight, ball.position.y))) {
+    ball.velocity.x *= -1.05;
+    float a = ball.position.y - leftPaddle.position.y;
+    ball.velocity.y = map(a, -paddleLength, paddleLength, -10, 10);
+    
+    ball.velocity.y = (ball.velocity.y > 0) ? max(ball.velocity.y, minSpeed) : min(ball.velocity.y, -minSpeed);
+  }
 }
